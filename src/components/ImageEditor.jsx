@@ -172,7 +172,7 @@ const ImageEditor = () => {
 
             <div className='flex flex-col gap-5 mt-4 '>
                 <div className='w-full flex justify-center'>
-                    <span className='w-fit text-lg w-full shadow-[0_3px#ffdd00] '>
+                    <span className='w-fit text-lg shadow-[0_3px#ffdd00] '>
                     What other users generated:
                     </span>
                 </div>
