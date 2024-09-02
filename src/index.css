@@ -1,4 +1,7 @@
-/* src/App.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .dropzone {
   border: 2px dashed #ccc;
   padding: 20px;
