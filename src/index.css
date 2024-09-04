@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Pacifico-Regular' ;
+  src: local("Pacifico-Regular"),
+  url("/fonts/Pacifico-Regular.ttf") format("opentype");
+}
+
+.pacifico-font { 
+  font-family: 'Pacifico-Regular';
+}
+
+
 .dropzone {
   border: 2px dashed #ccc;
   padding: 20px;
