@@ -32,7 +32,7 @@ const Schrolling= () => {
                 },
             });
             const fetchedImages = res.data.result;
-            
+            console.log("res",res)
             if (fetchedImages.length < 12) {
                 setHasMore(false);
             }
@@ -80,14 +80,14 @@ const Schrolling= () => {
                        
                     >
                         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 justify-center'>
-                            {publicImages.map((item) => (
-                                <div key={item.id} className='rounded-md hover:-translate-y-1 transition duration-300'>
+                            {publicImages?.map((item) => (
+                                <div key={item?.id} className='rounded-md hover:-translate-y-1 transition duration-300'>
                                     <img 
-                                        src={item.image[0].url} 
-                                        alt={`${item.name} wellington sign image`} 
-                                        className='rounded-md shadow-[0_0_0_1px#ffff00] hover:shadow-[0_0_0_3px#ffff00 ]' 
+                                        src={item?.image[0].url} 
+                                        alt={`${item?.name} wellington sign image `} 
+                                        className='rounded-md shadow-[0_0_0_1px#ffff00] hover:shadow-[0_0_0_3px#ffff00 ] w-[350px] h-[200px] object-cover' 
                                     />
-                                    <div className='text-left text-sm italic p-1'>By {item.name}</div>
+                                    <div className='text-left text-sm italic p-1'>By {item?.name}</div>
                                 </div>
                             ))}
                         </div>
