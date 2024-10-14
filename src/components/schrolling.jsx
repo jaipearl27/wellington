@@ -1,27 +1,16 @@
-// src/components/ImageEditor.js
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
-import Modal from '@mui/material/Modal';
-import { useForm } from 'react-hook-form';
-import { toast, Toaster } from 'sonner';
+import React, { useState, useEffect } from 'react';
+import { Toaster } from 'sonner';
 import { ClipLoader } from "react-spinners";
 import axios from 'axios';
-import InfiniteScroll from 'react-infinite-scroll-component'; // Import the library
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { BiUpArrowCircle } from "react-icons/bi";
 
-const Schrolling= () => {
+const Schrolling = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [publicImages, setPublicImages] = useState([]);
-    const [hasMore, setHasMore] = useState(true); // To track if more images are available
-    const [page, setPage] = useState(1); // Current page
-
-    const {
-        register,
-        handleSubmit,
-        setError,
-        formState: { errors },
-    } = useForm()
-
-
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(1);
+    const [showScrollButton, setShowScrollButton] = useState(false); // State to track button visibility
 
     const getData = async (currentPage) => {
         try {
@@ -32,26 +21,68 @@ const Schrolling= () => {
                 },
             });
             const fetchedImages = res.data.result;
-            console.log("res",res)
             if (fetchedImages.length < 12) {
                 setHasMore(false);
             }
-
             setPublicImages((prevImages) => [...prevImages, ...fetchedImages]);
         } catch (err) {
             console.error(err);
-            setHasMore(false); 
+            setHasMore(false);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     useEffect(() => {
         getData(page);
+
+        // Event listener for scroll event
+        const handleScroll = () => {
+            if (window.scrollY > 300) {
+                setShowScrollButton(true); // Show button if scrolled more than 300px
+            } else {
+                setShowScrollButton(false); // Hide button if at the top
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll); // Cleanup on unmount
+        };
     }, [page]);
 
     const fetchMoreData = () => {
+        setIsLoading(true);
         setPage((prevPage) => prevPage + 1);
     };
 
+    // Scroll to the top function
+
+  
+    
+        const handleScroll = () => {
+            // Show button when scrolled down 300 pixels
+            if (window.scrollY > 300) {
+                setShowScrollButton(true);
+            } else {
+                setShowScrollButton(false);
+            }
+        };
+    
+        const scrollToTop = () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth', // Smooth scrolling
+            });
+        };
+    
+        useEffect(() => {
+            window.addEventListener('scroll', handleScroll);
+            // Clean up the event listener on component unmount
+            return () => {
+                window.removeEventListener('scroll', handleScroll);
+            };
+        }, []);
 
     return (
         <>
@@ -59,33 +90,37 @@ const Schrolling= () => {
             <div className='flex flex-col gap-4 py-10 space-y-10'>
                 <h1 className='pacifico-font text-3xl md:text-4xl'>Wellington Sign Game</h1>
 
-
-                <div className='flex flex-col gap-5 mt-4 '>
+                <div className='flex flex-col gap-5 mt-4'>
                     <div className='w-full flex justify-center'>
-                        <span className='w-fit text-lg shadow-[0_3px#ffdd00] '>
+                        <span className='w-fit text-lg shadow-[0_3px#ffdd00]'>
                             What other users generated:
                         </span>
                     </div>
-                 
+
+                    {isLoading && (
+                        <div className='flex justify-center'>
+                            <ClipLoader color="#ffdd00" loading={isLoading} size={50} />
+                        </div>
+                    )}
+
                     <InfiniteScroll
-                        dataLength={publicImages.length} 
+                        dataLength={publicImages.length}
                         next={fetchMoreData}
                         hasMore={hasMore}
-                        loader={<h4>Loading...</h4>}
+                        loader={<h4>Loading more images...</h4>}
                         endMessage={
                             <p style={{ textAlign: 'center' }}>
-                                <b>data completed</b>
+                                <b>All images loaded</b>
                             </p>
                         }
-                       
                     >
                         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 justify-center'>
                             {publicImages?.map((item) => (
                                 <div key={item?.id} className='rounded-md hover:-translate-y-1 transition duration-300'>
                                     <img 
                                         src={item?.image[0].url} 
-                                        alt={`${item?.name} wellington sign image `} 
-                                        className='rounded-md shadow-[0_0_0_1px#ffff00] hover:shadow-[0_0_0_3px#ffff00 ] w-[350px] h-[200px] object-cover' 
+                                        alt={`${item?.name} wellington sign image`} 
+                                        className='rounded-md shadow-[0_0_0_1px#ffff00] hover:shadow-[0_0_0_3px#ffff00] w-[350px] h-[200px] object-cover' 
                                     />
                                     <div className='text-left text-sm italic p-1'>By {item?.name}</div>
                                 </div>
@@ -93,6 +128,15 @@ const Schrolling= () => {
                         </div>
                     </InfiniteScroll>
                 </div>
+                {showScrollButton && (
+                <div className='fixed bottom-5 right-5'>
+                    <BiUpArrowCircle
+                        onClick={scrollToTop}
+                        size="50"
+                        className='bg-yellow-500 text-white p-3 rounded-full shadow-lg hover:bg-yellow-600 transition duration-300 cursor-pointer'
+                    />
+                </div>
+            )}
             </div>
         </>
     );
