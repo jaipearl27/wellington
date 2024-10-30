@@ -139,6 +139,7 @@ const ImageEditor = () => {
                 },
             })
             setIsLoading(false)
+            getData()
             handleClose()
         }).catch(err => {
             toast(`${err?.response?.data?.message ? err?.response?.data?.message : 'Server busy, please try again later'}`, {
