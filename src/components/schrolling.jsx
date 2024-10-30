@@ -1,40 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import { ClipLoader } from "react-spinners";
-import axios from 'axios';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { BiUpArrowCircle } from "react-icons/bi";
 
-const Schrolling = () => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [publicImages, setPublicImages] = useState([]);
-    const [hasMore, setHasMore] = useState(true);
-    const [page, setPage] = useState(1);
+const Schrolling = (props) => {
+    const {publicImages,fetchMoreData, isLoading, hasMore } = props;
     const [showScrollButton, setShowScrollButton] = useState(false); // State to track button visibility
 
-    const getData = async (currentPage) => {
-        try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/game`, {
-                params: {
-                    page: currentPage,
-                    limit: 12,
-                },
-            });
-            const fetchedImages = res.data.result;
-            if (fetchedImages.length < 12) {
-                setHasMore(false);
-            }
-            setPublicImages((prevImages) => [...prevImages, ...fetchedImages]);
-        } catch (err) {
-            console.error(err);
-            setHasMore(false);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     useEffect(() => {
-        getData(page);
+        
 
         // Event listener for scroll event
         const handleScroll = () => {
@@ -49,12 +25,9 @@ const Schrolling = () => {
         return () => {
             window.removeEventListener('scroll', handleScroll); // Cleanup on unmount
         };
-    }, [page]);
+    }, []);
 
-    const fetchMoreData = () => {
-        setIsLoading(true);
-        setPage((prevPage) => prevPage + 1);
-    };
+
 
     // Scroll to the top function
 

@@ -10,7 +10,9 @@ import Schrolling from "../components/schrolling"
 const ImageEditor = () => {
 
     const [isLoading, setIsLoading] = useState(false);
-    const [publicImages, setPublicImages] = useState(null)
+    const [publicImages, setPublicImages] = useState([]);
+    const [hasMore, setHasMore] = useState(true);
+
     const {
         register,
         handleSubmit,
@@ -25,18 +27,50 @@ const ImageEditor = () => {
 
     const [selfie, setSelfie] = useState(null);
     const canvasRef = useRef(null);
-
+    const [page, setPage]= useState(1)
     const [previewImage, setPreviewImage] = useState(null)
 
-    const getData = (currentPage) => {
+    const getData = () => {
+        console.log("getting data",)
         axios.get(`${import.meta.env.VITE_API_URL}/game`,{
             params:{
-                page:currentPage,limit:12
+                page:1,limit:12
             }
         }).then((res) => {
             setPublicImages(res.data.result)
+            if(res?.data?.totalPages > 1){
+                console.log('setting has more ture')
+                setHasMore(true)
+            }
+            setPage(2)
         }).catch(err => console.log(err))
     }
+
+
+
+    
+    const fetchMoreData = async () => {
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/game`, {
+                params: {
+                    page: page,
+                    limit: 12,
+                },
+            });
+            const fetchedImages = res.data.result;
+            if (fetchedImages.length < 12) {
+                setHasMore(false);
+            }
+            setPublicImages((prevImages) => [...prevImages, ...fetchedImages]);
+        } catch (err) {
+            console.error(err);
+            setHasMore(false);
+        } finally {
+            setIsLoading(false);
+            setPage((prevPage) => prevPage + 1);
+        }
+    };
+
 
 
     const { acceptedFiles, getRootProps, fileRejections, getInputProps } = useDropzone({
@@ -253,7 +287,11 @@ const ImageEditor = () => {
 
                 <div className='flex flex-col gap-5 mt-4 '>
             
-                    <Schrolling/>
+                    <Schrolling
+                        publicImages={publicImages}
+                        fetchMoreData={fetchMoreData}
+                        hasMore={hasMore}
+                    />
                 </div>
 
 
