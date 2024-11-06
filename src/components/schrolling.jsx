@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 import { ClipLoader } from "react-spinners";
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { BiUpArrowCircle } from "react-icons/bi";
+import { Zoom } from '@mui/material';
 
 const Schrolling = (props) => {
     const {publicImages,fetchMoreData, isLoading, hasMore } = props;
@@ -60,7 +61,7 @@ const Schrolling = (props) => {
     return (
         <>
             <Toaster />
-            <div className='flex flex-col gap-4 py-10 space-y-10'>
+            <div className='flex flex-col gap-4 py-10 space-y-10 w-full'>
                 <h1 className='pacifico-font text-3xl md:text-4xl'>Wellington Sign Game</h1>
 
                 <div className='flex flex-col gap-5 mt-4'>
@@ -90,11 +91,12 @@ const Schrolling = (props) => {
                         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 justify-center'>
                             {publicImages?.map((item) => (
                                 <div key={item?.id} className='rounded-md hover:-translate-y-1 transition duration-300'>
+                                    <Zoom>
                                     <img 
                                         src={item?.image[0].url} 
                                         alt={`${item?.name} wellington sign image`} 
                                         className='rounded-md shadow-[0_0_0_1px#ffff00] hover:shadow-[0_0_0_3px#ffff00] w-[350px] h-[200px] object-cover' 
-                                    />
+                                    /></Zoom>
                                     <div className='text-left text-sm italic p-1'>By {item?.name}</div>
                                 </div>
                             ))}
