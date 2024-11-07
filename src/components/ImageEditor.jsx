@@ -146,50 +146,94 @@ const ImageEditor = () => {
     };
 
 
+    // const onSubmit = (data) => {
+    //     if (isLoading) return
+    //     const regex = /\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/
+    //     if (!regex.test(data.email)) {
+    //         setError("email", {
+    //             type: "manual",
+    //             message: "Please enter a valid E-Mail address",
+    //         })
+    //         return
+    //     }
+    //     setIsLoading(true)
+    //     // converting base64 image to blob
+    //     const file = dataURLtoFile(previewImage, 'wellingtonImage.png')
+    //     const formData = new FormData()
+
+    //     formData.append('name', data.name)
+    //     formData.append('email', data.email)
+    //     formData.append('images', file)
+
+    //     axios.post(`${import.meta.env.VITE_API_URL}/game`, formData).then((res) => {
+    //         toast(res.data.message, {
+    //             style: {
+    //                 color: 'white',
+    //                 background: 'green',
+    //             },
+    //         })
+    //         setIsLoading(false)
+    //         getData()
+    //         handleClose()
+    //     }).catch(err => {
+    //         toast(`${err?.response?.data?.message ? err?.response?.data?.message : 'Server busy, please try again later'}`, {
+    //             style: {
+    //                 color: 'white',
+    //                 background: 'red',
+    //             },
+    //         })
+    //         setIsLoading(false)
+    //         handleClose()
+
+    //     }
+
+    //     )
+
+    // }
     const onSubmit = (data) => {
-        if (isLoading) return
-        const regex = /\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/
-        if (!regex.test(data.email)) {
-            setError("email", {
-                type: "manual",
-                message: "Please enter a valid E-Mail address",
-            })
-            return
-        }
-        setIsLoading(true)
-        // converting base64 image to blob
-        const file = dataURLtoFile(previewImage, 'wellingtonImage.png')
-        const formData = new FormData()
+    if (isLoading) return;
+    const regex = /\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/;
+    if (!regex.test(data.email)) {
+        setError("email", {
+            type: "manual",
+            message: "Please enter a valid E-Mail address",
+        });
+        return;
+    }
+    setIsLoading(true);
+    
+    // Converting base64 image to blob
+    const file = dataURLtoFile(previewImage, 'wellingtonImage.png');
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('email', data.email);
+    formData.append('images', file);
 
-        formData.append('name', data.name)
-        formData.append('email', data.email)
-        formData.append('images', file)
-
-        axios.post(`${import.meta.env.VITE_API_URL}/game`, formData).then((res) => {
+    axios.post(`${import.meta.env.VITE_API_URL}/game`, formData)
+        .then((res) => {
             toast(res.data.message, {
                 style: {
                     color: 'white',
                     background: 'green',
                 },
-            })
-            setIsLoading(false)
-            getData()
-            handleClose()
-        }).catch(err => {
-            toast(`${err?.response?.data?.message ? err?.response?.data?.message : 'Server busy, please try again later'}`, {
+            });
+            setIsLoading(false);
+            getData();
+            setSelfie(null); // Clear selfie image on successful submission
+            handleClose();
+        })
+        .catch(err => {
+            toast(`${err?.response?.data?.message || 'Server busy, please try again later'}`, {
                 style: {
                     color: 'white',
                     background: 'red',
                 },
-            })
-            setIsLoading(false)
-            handleClose()
-
-        }
-
-        )
-
-    }
+            });
+            setIsLoading(false);
+            handleClose();
+            setSelfie(null); // Optionally clear on error
+        });
+};
 
     useLayoutEffect(() => {
         getData()
@@ -293,6 +337,7 @@ const ImageEditor = () => {
                         hasMore={hasMore}
                     />
                 </div>
+          
 
 
             </div>
