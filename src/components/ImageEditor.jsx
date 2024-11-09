@@ -1,197 +1,141 @@
-// src/components/ImageEditor.js
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Modal from '@mui/material/Modal';
 import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'sonner';
-import { ClipLoader } from "react-spinners";
+import { ClipLoader } from 'react-spinners';
 import axios from 'axios';
-import Schrolling from "../components/schrolling"
-const ImageEditor = () => {
+import ReactCrop, { centerCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
+const ImageEditor = () => {
     const [isLoading, setIsLoading] = useState(false);
-    const [publicImages, setPublicImages] = useState([]);
-    const [hasMore, setHasMore] = useState(true);
+    const [selfie, setSelfie] = useState(null);
+    const [crop, setCrop] = useState(null);
+    const [completedCrop, setCompletedCrop] = useState(null);
+    const [scale, setScale] = useState(1);
+    const [rotate, setRotate] = useState(0);
+    const canvasRef = useRef(null);
+    const imgRef = useRef(null);
 
     const {
         register,
         handleSubmit,
         setError,
+        reset, // Destructure reset from react-hook-form to reset form fields
         formState: { errors },
-    } = useForm()
+    } = useForm();
+
+    const [previewImage, setPreviewImage] = useState(null)
+
 
 
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
-
-    const [selfie, setSelfie] = useState(null);
-    const canvasRef = useRef(null);
-    const [page, setPage]= useState(1)
-    const [previewImage, setPreviewImage] = useState(null)
-
-    const getData = () => {
-        console.log("getting data",)
-        axios.get(`${import.meta.env.VITE_API_URL}/game`,{
-            params:{
-                page:1,limit:12
-            }
-        }).then((res) => {
-            setPublicImages(res.data.result)
-            if(res?.data?.totalPages > 1){
-                console.log('setting has more ture')
-                setHasMore(true)
-            }
-            setPage(2)
-        }).catch(err => console.log(err))
-    }
-
-
-
-    
-    const fetchMoreData = async () => {
-        try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/game`, {
-                params: {
-                    page: page,
-                    limit: 12,
-                },
-            });
-            const fetchedImages = res.data.result;
-            if (fetchedImages.length < 12) {
-                setHasMore(false);
-            }
-            setPublicImages((prevImages) => [...prevImages, ...fetchedImages]);
-        } catch (err) {
-            console.error(err);
-            setHasMore(false);
-        } finally {
-            setIsLoading(false);
-            setPage((prevPage) => prevPage + 1);
-        }
-    };
-
-
-
-    const { acceptedFiles, getRootProps, fileRejections, getInputProps } = useDropzone({
-        accept: {
-            'image/*': [],
-        },
+    const { getRootProps, getInputProps } = useDropzone({
+        accept: 'image/*',
         onDrop: (acceptedFiles) => {
             const file = acceptedFiles[0];
             const reader = new FileReader();
             reader.onloadend = () => {
                 setSelfie(reader.result);
+                setCrop(null);
             };
             reader.readAsDataURL(file);
-        }
+        },
     });
 
-    function dataURLtoFile(dataurl, filename) {
-        var arr = dataurl.split(','),
-            mime = arr[0].match(/:(.*?);/)[1],
-            bstr = atob(arr[arr.length - 1]),
-            n = bstr.length,
-            u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-        return new File([u8arr], filename, { type: mime });
-    }
+    const onImageLoad = (e) => {
+        const { width, height } = e.currentTarget;
+        setCrop(centerCrop(width, height, 16 / 9));
+    };
 
-    const drawRoundImage = (ctx, image, x, y, radius) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = image;
-            img.onload = () => {
-                const diameter = radius * 2;
+    const onCropChange = (crop) => {
+        setCrop(crop);
+    };
 
-                ctx.save();
-                // Create circular clipping path
-                ctx.beginPath();
-                ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
-                ctx.clip();
-                // Draw the image to fit the clipping path
-                ctx.drawImage(img, x, y, diameter, diameter);
-                // ctx.restore();
-                resolve();
-            };
-        });
+    const onCropComplete = (crop) => {
+        setCompletedCrop(crop);
     };
 
 
     const createImage = async () => {
-        if (!canvasRef.current || !selfie) return;
-
+        if (!canvasRef.current || !selfie || !completedCrop) return;
+    
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-
+    
         const baseImage = new Image();
-        baseImage.src = '/wellington.jfif'; // Replace with your image path
+        baseImage.src = selfie;
+    
         await new Promise((resolve) => {
             baseImage.onload = resolve;
         });
-
-        // Draw the base image
-        ctx.drawImage(baseImage, 0, 0);
-
-        // Draw the selfie in a diagonal oval crop
-        await drawRoundImage(ctx, selfie, 678, 262, 64); // Adjust values as needed
-
-        setPreviewImage(canvasRef.current.toDataURL())
-        //open modal
-
-        handleOpen()
-
+    
+        // Set the canvas size to the crop dimensions
+        canvas.width = completedCrop.width;
+        canvas.height = completedCrop.height;
+    
+        // Draw the cropped section on the canvas
+        ctx.drawImage(
+            baseImage,
+            completedCrop.x,
+            completedCrop.y,
+            completedCrop.width,
+            completedCrop.height,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+    
+        // Draw the rounded image after cropping
+        await drawRoundImage(ctx, selfie, canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 2);
+    
+        // Convert canvas to data URL for preview
+        setPreviewImage(canvas.toDataURL('image/png'));
+        handleOpen();
     };
+    
 
 
-    // const onSubmit = (data) => {
-    //     if (isLoading) return
-    //     const regex = /\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/
-    //     if (!regex.test(data.email)) {
-    //         setError("email", {
-    //             type: "manual",
-    //             message: "Please enter a valid E-Mail address",
-    //         })
-    //         return
-    //     }
-    //     setIsLoading(true)
-    //     // converting base64 image to blob
-    //     const file = dataURLtoFile(previewImage, 'wellingtonImage.png')
-    //     const formData = new FormData()
+    const drawRoundImage = (ctx, imageSrc, x, y, radius) => {
+    return new Promise((resolve) => {
+        const image = new Image();
+        image.src = imageSrc;
 
-    //     formData.append('name', data.name)
-    //     formData.append('email', data.email)
-    //     formData.append('images', file)
+        image.onload = () => {
+            ctx.save();
+            // Draw a circular clipping path
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
 
-    //     axios.post(`${import.meta.env.VITE_API_URL}/game`, formData).then((res) => {
-    //         toast(res.data.message, {
-    //             style: {
-    //                 color: 'white',
-    //                 background: 'green',
-    //             },
-    //         })
-    //         setIsLoading(false)
-    //         getData()
-    //         handleClose()
-    //     }).catch(err => {
-    //         toast(`${err?.response?.data?.message ? err?.response?.data?.message : 'Server busy, please try again later'}`, {
-    //             style: {
-    //                 color: 'white',
-    //                 background: 'red',
-    //             },
-    //         })
-    //         setIsLoading(false)
-    //         handleClose()
+            // Draw the image within the circular path
+            ctx.drawImage(
+                image,
+                x - radius,
+                y - radius,
+                radius * 2,
+                radius * 2
+            );
 
-    //     }
+            ctx.restore();
+            resolve();
+        };
 
-    //     )
-
-    // }
-    const onSubmit = (data) => {
+        image.onerror = () => {
+            console.error("Failed to load image");
+            resolve();
+        };
+    });
+};
+const onSubmit = async (data) => {
     if (isLoading) return;
+
+    // Validate email format
     const regex = /\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/;
     if (!regex.test(data.email)) {
         setError("email", {
@@ -200,45 +144,101 @@ const ImageEditor = () => {
         });
         return;
     }
+
     setIsLoading(true);
-    
-    // Converting base64 image to blob
-    const file = dataURLtoFile(previewImage, 'wellingtonImage.png');
-    const formData = new FormData();
-    formData.append('name', data.name);
-    formData.append('email', data.email);
-    formData.append('images', file);
 
-    axios.post(`${import.meta.env.VITE_API_URL}/game`, formData)
-        .then((res) => {
-            toast(res.data.message, {
-                style: {
-                    color: 'white',
-                    background: 'green',
-                },
+    // If cropping is active, use the canvas to crop the image
+    if (completedCrop && selfie) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const image = imgRef.current;
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+
+        canvas.width = completedCrop.width * scaleX;
+        canvas.height = completedCrop.height * scaleY;
+
+        ctx.drawImage(
+            image,
+            completedCrop.x * scaleX,
+            completedCrop.y * scaleY,
+            completedCrop.width * scaleX,
+            completedCrop.height * scaleY,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        // Convert the cropped image to a Blob and then a File
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        const file = new File([blob], 'cropped-image.png', { type: 'image/png' });
+
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('email', data.email);
+        formData.append('images', file);
+
+        axios
+            .post(`${import.meta.env.VITE_API_URL}/game`, formData)
+            .then((res) => {
+                toast(res.data.message, {
+                    style: {
+                        color: 'white',
+                        background: 'green',
+                    },
+                });
+                setIsLoading(false);
+                getData();
+                setSelfie(null); // Clear selfie image after successful submission
+                handleClose();
+            })
+            .catch((err) => {
+                toast(`${err?.response?.data?.message || 'Server busy, please try again later'}`, {
+                    style: {
+                        color: 'white',
+                        background: 'red',
+                    },
+                });
+                setIsLoading(false);
+                handleClose();
+                setSelfie(null); // Optionally clear on error
             });
-            setIsLoading(false);
-            getData();
-            setSelfie(null); // Clear selfie image on successful submission
-            handleClose();
-        })
-        .catch(err => {
-            toast(`${err?.response?.data?.message || 'Server busy, please try again later'}`, {
-                style: {
-                    color: 'white',
-                    background: 'red',
-                },
+    } else if (previewImage) {
+        // If cropping is not applied, handle base64 image conversion directly
+        const file = dataURLtoFile(previewImage, 'wellingtonImage.png');
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('email', data.email);
+        formData.append('images', file);
+
+        axios
+            .post(`${import.meta.env.VITE_API_URL}/game`, formData)
+            .then((res) => {
+                toast(res.data.message, {
+                    style: {
+                        color: 'white',
+                        background: 'green',
+                    },
+                });
+                setIsLoading(false);
+                getData();
+                setSelfie(null); // Clear selfie image after successful submission
+                handleClose();
+            })
+            .catch((err) => {
+                toast(`${err?.response?.data?.message || 'Server busy, please try again later'}`, {
+                    style: {
+                        color: 'white',
+                        background: 'red',
+                    },
+                });
+                setIsLoading(false);
+                handleClose();
+                setSelfie(null); // Optionally clear on error
             });
-            setIsLoading(false);
-            handleClose();
-            setSelfie(null); // Optionally clear on error
-        });
+    }
 };
-
-    useLayoutEffect(() => {
-        getData()
-    }, [])
-
 
 
     return (
@@ -246,34 +246,68 @@ const ImageEditor = () => {
             <Toaster />
             <div className='flex flex-col gap-4 py-10 space-y-10'>
                 <h1 className='pacifico-font text-3xl md:text-4xl'>Wellington Sign Game</h1>
-
-                <div className='flex  flex-col gap-5 w-full justify-center items-center'>
-                    <div className={`text-sm`}>Tip: If it fits the box below well, it will look better.</div>
-
-                    <div {...getRootProps({ className: 'dropzone w-[300px] h-[300px] font-medium flex justify-center items-center relative' })}>
-                        <input {...getInputProps()} />
-                        <p>Drag 'n' drop your image here, or click to select one</p>
-
-                        {selfie && (
-                            <div className='absolute flex items-center object-contain'>
-                                <img src={selfie} className='rounded-md object-contain max-w-[300px] max-h-[300px]' width={'300px'} height={'300px'} />
-                            </div>
-                        )
-                        }
-
-                    </div>
-
-                    <div className={`${!selfie && 'hidden'}  text-sm transition duration-300`}>Click on the box again to change selected image</div>
+                <div className='flex flex-col gap-5 w-full justify-center items-center'>
+                    {!selfie && (
+                        <div {...getRootProps({ className: 'dropzone w-[300px] h-[300px] font-medium flex justify-center items-center relative' })}>
+                            <input {...getInputProps()} />
+                            <p>Drag 'n' drop your image here, or click to select one</p>
+                        </div>
+                    )}
+                    {selfie && (
+                        <ReactCrop
+                            src={selfie}
+                            crop={crop}
+                            onChange={onCropChange}
+                            onComplete={onCropComplete}
+                            aspect={16 / 9}
+                        >
+                            <img
+                                ref={imgRef}
+                                src={selfie}
+                                style={{
+                                    transform: `scale(${scale}) rotate(${rotate}deg)`,
+                                
+                                }}
+                                onLoad={onImageLoad}
+                                className='w-[600px] h-48' 
+                            />
+                        </ReactCrop>
+                    )}
+                <div className={`${!selfie && 'hidden'}  text-sm transition duration-300`}>Click on the box again to change selected image</div>
                     <button
                         onClick={createImage}
                         className={`${!selfie && 'hidden'} rounded-md text-center px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black hover:shadow-[0_0_0_1px#000000] transition duration-500`}>
                         Start Generation
                     </button>
+                    {/* {selfie && (
+                        <div className='flex flex-col items-center'>
+                            <label className='text-sm mb-2'>Zoom</label>
+                            <input
+                                type='range'
+                                min='1'
+                                max='3'
+                                step='0.1'
+                                value={scale}
+                                onChange={(e) => setScale(e.target.value)}
+                                className='w-full'
+                            />
+                        </div>
+                    )} */}
 
+                    <button
+                        onClick={() => setRotate(rotate + 90)}
+                        className={`${!selfie && 'hidden'} rounded-md text-center px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black hover:shadow-[0_0_0_1px#000000] transition duration-500`}
+                    >
+                        Rotate
+                    </button>
+
+                  
                 </div>
+
                 <div className='overflow-hidden w-full absolute -z-1'>
                     <canvas ref={canvasRef} width={1050} height={650} style={{ border: '1px solid black', display: "none" }} />
                 </div>
+
                 <Modal
                     open={open}
                     onClose={handleClose}
@@ -328,18 +362,6 @@ const ImageEditor = () => {
 
 
                 </Modal>
-
-                <div className='flex flex-col gap-5 mt-4 '>
-            
-                    <Schrolling
-                        publicImages={publicImages}
-                        fetchMoreData={fetchMoreData}
-                        hasMore={hasMore}
-                    />
-                </div>
-          
-
-
             </div>
         </>
     );

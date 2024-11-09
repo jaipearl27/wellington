@@ -60,20 +60,25 @@ const Schrolling = (props) => {
                         endMessage={<p style={{ textAlign: 'center' }}><b>All images loaded</b></p>}
                     >
                         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 justify-center'>
-                            {publicImages?.map((item) => (
-                                <div
-                                    key={item?.id}
-                                    className='rounded-md hover:-translate-y-1 transition duration-300 cursor-pointer'
-                                    onClick={() => openModal(item?.image[0].url)}
-                                >
-                                    <img 
-                                        src={item?.image[0].url} 
-                                        alt={`${item?.name} wellington sign image`} 
-                                        className='rounded-md shadow-[0_0_0_1px#ffff00] hover:shadow-[0_0_0_3px#ffff00] w-[350px] h-[200px] object-cover'
-                                    />
-                                    <div className='text-left text-sm italic p-1'>By {item?.name}</div>
-                                </div>
-                            ))}
+                        {publicImages?.map((item) => (
+    <div
+        key={item?.id}
+        className='rounded-md hover:-translate-y-1 transition duration-300 cursor-pointer'
+        onClick={() => item?.image && item.image[0]?.url && openModal(item.image[0].url)}
+    >
+        {item?.image && item.image[0]?.url ? (
+            <img 
+                src={item.image[0].url} 
+                alt={`${item?.name} wellington sign image`} 
+                className='rounded-md shadow-[0_0_0_1px#ffff00] hover:shadow-[0_0_0_3px#ffff00] w-[350px] h-[200px] object-cover'
+            />
+        ) : (
+            <p>No Image Available</p>
+        )}
+        <div className='text-left text-sm italic p-1'>By {item?.name}</div>
+    </div>
+))}
+
                         </div>
                     </InfiniteScroll>
                 </div>

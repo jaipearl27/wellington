@@ -59,7 +59,7 @@ function CanvasPreview({ image, crop, scale = 1, rotate = 0 }) {
         drawImageOnCanvas();
     }, [image, crop, scale, rotate]);
 
-    return <canvas ref={canvasRef} style={{ maxWidth: '100%', height: 'auto' }} />;
+    return <canvas ref={canvasRef} style={{ maxWidth: '100%', height: 'auto' }}  className='bg-red-600'/>;
 }
 
 export default CanvasPreview;
