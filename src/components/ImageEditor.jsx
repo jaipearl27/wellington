@@ -49,10 +49,24 @@ const ImageEditor = () => {
             reader.readAsDataURL(file);
         }
     });
-
     const onImageLoad = (e) => {
         const { width, height } = e.currentTarget;
-        setCrop(centerCrop(width, height, 16 / 9));
+        
+        const size = Math.min(width, height);
+        
+        const x = (width - size) / 2;
+        const y = (height - size) / 2;
+        
+        const initialCrop = {
+            unit: 'px',
+            x,
+            y,
+            width: size,
+            height: size
+        };
+        
+        setCrop(initialCrop);
+        setCompletedCrop(initialCrop);
     };
 
     const onCropChange = (crop) => {
