@@ -113,6 +113,7 @@ const Schrolling = (props) => {
                                     </TransformComponent>
                                 </TransformWrapper>
                             )}
+                            <div className='mt-3 text-sm text-center w-full'>Scroll or pinch to zoom</div>
                             <button
                                 onClick={closeModal}
                                 className=' text-white bg-red-500 hover:bg-yellow-600 h-6 w-6  rounded-md absolute top-24 right-80 mr-[28px] text-center '
