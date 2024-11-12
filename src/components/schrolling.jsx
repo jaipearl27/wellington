@@ -112,27 +112,28 @@ const Schrolling = (props) => {
           className=" relative"
         >
           <div className="flex items-center justify-center h-screen ">
-            <div className="relative bg-white rounded-lg px-2 md:p-5 shadow-lg w-full md:w-[60%] lg:w-[50%] h-auto sm:h-[90%] md:h-auto ">
-              {selectedImage && (
-                <TransformWrapper
-                  initialScale={1}
-                  minScale={1}
-                  wheel={{ step: 0.1 }}
-                  doubleClick={{ mode: "zoomIn" }}
-                  pinch={{step: 0.1}}
-                  className={'!h-[100px]'}
-                >
-                  <TransformComponent>
-                    <img
-                      src={selectedImage}
-                      alt="Zoomable Wellington Sign"
-                      className="w-full rounded-md object-contain "
-                    />
-                  </TransformComponent>
-                </TransformWrapper>
-              )}
-              <div className="mt-3 text-sm text-center w-full">
-                Scroll or pinch to zoom
+            <div className="relative bg-white rounded-lg p-5 shadow-lg w-full md:w-[60%] lg:w-[50%] max-h-screen">
+              <div className="flex flex-col gap-2">
+                {selectedImage && (
+                  <TransformWrapper
+                    initialScale={1}
+                    minScale={1}
+                    wheel={{ step: 0.1 }}
+                    doubleClick={{ mode: "zoomIn" }}
+                    pinch={{ step: 0.1 }}
+                  >
+                    <TransformComponent>
+                      <img
+                        src={selectedImage}
+                        alt="Zoomable Wellington Sign"
+                        className="w-full rounded-md object-contain "
+                      />
+                    </TransformComponent>
+                  </TransformWrapper>
+                )}
+                <div className="mt-3 text-sm text-center w-full">
+                  Scroll or pinch to zoom
+                </div>
               </div>
               <button
                 onClick={closeModal}
